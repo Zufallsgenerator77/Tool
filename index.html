@@ -4,121 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <title>Zufalls-Tool</title>
+    <title>Zufall</title>
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Zufall">
+    <link rel="manifest" href="manifest.json">
 
-    <link rel="apple-touch-icon" sizes="180x180" href="https://www.gstatic.com/android/keyboard/emojikitchen/20200922/u2685/u2685_u2685.png
-">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://cdn-icons-png.flaticon.com/512/217/217836.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://cdn-icons-png.flaticon.com/512/217/217836.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/217/217836.png">
 
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, system-ui, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #1a1a1a;
+            background-color: #121212;
             color: white;
             margin: 0;
             overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        /* Die geheimen Steuerzonen in den Ecken */
-        .secret-zone {
+        /* Geheime Zonen */
+        .corner {
             position: absolute;
-            width: 100px;
-            height: 100px;
-            z-index: 1000;
-            /* background: rgba(255, 255, 255, 0.1); /* Zum Testen leicht sichtbar machen */
+            width: 80px;
+            height: 80px;
+            z-index: 9999;
+            /* background: rgba(255,255,255,0.1); */ /* Zum Testen aktivieren */
         }
-        #top-left { top: 0; left: 0; }
-        #top-right { top: 0; right: 0; }
+        #tl { top: 0; left: 0; }
+        #tr { top: 0; right: 0; }
 
-        .container {
-            text-align: center;
-            width: 100%;
-        }
-
-        .label {
-            font-size: 1.2rem;
-            color: #888;
-            margin-bottom: 10px;
-        }
-
-        #result {
-            font-size: 7rem;
-            font-weight: 800;
-            margin: 30px 0;
-            color: #ffffff;
-            text-shadow: 0 0 20px rgba(255,255,255,0.2);
-        }
-
+        .content { text-align: center; }
+        #num { font-size: 8rem; font-weight: bold; margin: 20px 0; }
         .btn {
-            background: linear-gradient(145deg, #333, #222);
+            background: #333;
             color: white;
-            border: 1px solid #444;
-            padding: 18px 40px;
-            border-radius: 30px;
-            font-size: 1.3rem;
-            font-weight: 600;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
-            outline: none;
+            border: 1px solid #555;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-
-        .btn:active {
-            transform: scale(0.95);
-            background: #444;
-        }
+        .btn:active { transform: scale(0.98); background: #444; }
     </style>
 </head>
 <body>
 
-    <div id="top-left" class="secret-zone" onclick="setNext(7)"></div>
-    <div id="top-right" class="secret-zone" onclick="setNext(13)"></div>
+    <div id="tl" class="corner" onclick="rig(7)"></div>
+    <div id="tr" class="corner" onclick="rig(13)"></div>
 
-    <div class="container">
-        <div class="label">Zufallszahl (1-100)</div>
-        <div id="result">?</div>
-        <button class="btn" onclick="startRolling()">Generieren</button>
+    <div class="content">
+        <div style="color: #666;">Generator v1.0</div>
+        <div id="num">?</div>
+        <button class="btn" onclick="roll()">START</button>
     </div>
 
     <script>
-        let forcedNumber = null;
+        let next = null;
+        function rig(n) { next = n; if(navigator.vibrate) navigator.vibrate(15); }
 
-        // Heimliches Setzen der Zahl durch Klick in die Ecken
-        function setNext(num) {
-            forcedNumber = num;
-            // Kleines haptisches Feedback falls vom Handy unterstützt
-            if (navigator.vibrate) navigator.vibrate(10);
-        }
-
-        function startRolling() {
-            const display = document.getElementById('result');
-            let counter = 0;
-            const maxTicks = 20;
-
-            const interval = setInterval(() => {
-                // Zufällige Zahlen während der Animation anzeigen
-                display.innerText = Math.floor(Math.random() * 100) + 1;
-                counter++;
-
-                if (counter >= maxTicks) {
-                    clearInterval(interval);
-                    
-                    // Finale Zahl bestimmen
-                    if (forcedNumber !== null) {
-                        display.innerText = forcedNumber;
-                        forcedNumber = null; // Reset für nächsten Durchgang
-                    } else {
-                        display.innerText = Math.floor(Math.random() * 100) + 1;
-                    }
+        function roll() {
+            const el = document.getElementById('num');
+            let count = 0;
+            const t = setInterval(() => {
+                el.innerText = Math.floor(Math.random() * 100) + 1;
+                if (++count > 20) {
+                    clearInterval(t);
+                    el.innerText = next || Math.floor(Math.random() * 100) + 1;
+                    next = null;
                 }
             }, 50);
         }
