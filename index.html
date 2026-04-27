@@ -28,13 +28,11 @@
             user-select: none;
         }
 
-        /* Geheime Zonen */
         .corner {
             position: absolute;
             width: 80px;
             height: 80px;
             z-index: 9999;
-            /* background: rgba(255,255,255,0.1); */ /* Zum Testen aktivieren */
         }
         #tl { top: 0; left: 0; }
         #tr { top: 0; right: 0; }
@@ -59,7 +57,7 @@
     <div id="tr" class="corner" onclick="rig(13)"></div>
 
     <div class="content">
-        <div style="color: #666;">Generator v1.0</div>
+        <div style="color: #666;">Generator (1-50)</div>
         <div id="num">?</div>
         <button class="btn" onclick="roll()">START</button>
     </div>
@@ -72,10 +70,13 @@
             const el = document.getElementById('num');
             let count = 0;
             const t = setInterval(() => {
-                el.innerText = Math.floor(Math.random() * 100) + 1;
+                // Animation zeigt jetzt nur Zahlen bis 50
+                el.innerText = Math.floor(Math.random() * 50) + 1;
+                
                 if (++count > 20) {
                     clearInterval(t);
-                    el.innerText = next || Math.floor(Math.random() * 100) + 1;
+                    // Finale Zahl: Entweder deine gezinkte ODER echter Zufall bis 50
+                    el.innerText = next || Math.floor(Math.random() * 50) + 1;
                     next = null;
                 }
             }, 50);
