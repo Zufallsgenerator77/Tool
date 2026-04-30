@@ -1,0 +1,91 @@
+<script>
+    const canvas = document.getElementById('wheel');
+    const ctx = canvas.getContext('2d');
+    const btn = document.getElementById('spinBtn');
+    const display = document.getElementById('resultDisplay');
+
+    const prizes = [
+        "Erhabene Helden Booster",      // 0
+        "Optimale Ordnung Booster",     // 1
+        "Boosterbundle",                // 2
+        "Pin Kollektion",               // 3
+        "PIKACHU EX",                   // 4 (DAS VERBOTENE FELD)
+        "Optimale Ordnung Booster"      // 5
+    ];
+
+    const colors = ["#111", "#222", "#111", "#222", "#FFD700", "#111"];
+    const arc = (2 * Math.PI) / prizes.length;
+    let totalRotation = 0; 
+
+    function draw() {
+        prizes.forEach((p, i) => {
+            const angle = i * arc;
+            ctx.fillStyle = colors[i];
+            ctx.beginPath();
+            ctx.moveTo(250, 250);
+            ctx.arc(250, 250, 250, angle, angle + arc);
+            ctx.fill();
+            ctx.strokeStyle = "#444";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.save();
+            ctx.translate(250, 250);
+            ctx.rotate(angle + arc / 2);
+            ctx.fillStyle = (i === 4) ? "black" : "white";
+            ctx.font = "bold 15px sans-serif";
+            ctx.textAlign = "right";
+            ctx.fillText(p, 230, 8);
+            ctx.restore();
+        });
+    }
+
+    function runSpin() {
+        btn.disabled = true;
+        display.innerText = "Das Rad dreht sich...";
+        
+        // 1. ABSOLUTE SICHERHEITSLOGIK
+        let targetIndex;
+        const rng = Math.random() * 100;
+
+        if (rng < 90) {
+            // Zu 90% einer der Booster (Index 0, 1 oder 5)
+            const safeBooster = [0, 1, 5];
+            targetIndex = safeBooster[Math.floor(Math.random() * safeBooster.length)];
+        } else {
+            // Zu 10% Bundle oder Pin (Index 2 oder 3)
+            targetIndex = Math.random() > 0.5 ? 2 : 3;
+        }
+
+        // DER HARD-BLOCKER: Falls targetIndex jemals 4 ist, erzwinge Index 0
+        if (targetIndex === 4) {
+            targetIndex = 0;
+        }
+
+        // 2. UNPRÄZISE ROTATION (Damit es nicht immer mittig landet)
+        const segmentDeg = 360 / prizes.length;
+        const extraRounds = 10; 
+        
+        // Zufälliger Stopp-Punkt innerhalb des Segments (zwischen 10% und 90% der Breite)
+        // Das sorgt dafür, dass der Pfeil auch mal am Rand des Feldes steht
+        const randomPosInSegment = (Math.random() * (segmentDeg * 0.8)) + (segmentDeg * 0.1);
+        
+        // Berechnung: Wir drehen so weit, dass das Ziel-Segment unter dem Pfeil (oben) landet
+        // Die Formel berücksichtigt den aktuellen Stand, um Sprünge zu vermeiden
+        const currentMod = totalRotation % 360;
+        const distanceToTarget = (360 - (targetIndex * segmentDeg) - randomPosInSegment + 270) % 360;
+        
+        const rotationAddition = (extraRounds * 360) + distanceToTarget;
+        totalRotation += rotationAddition;
+
+        canvas.style.transform = `rotate(${totalRotation}deg)`;
+
+        // 3. RESULTAT ANZEIGEN
+        setTimeout(() => {
+            display.innerText = "GEWONNEN: " + prizes[targetIndex];
+            btn.disabled = false;
+        }, 7000);
+    }
+
+    draw();
+</script>
