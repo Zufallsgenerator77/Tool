@@ -1,0 +1,86 @@
+<script>
+    const canvas = document.getElementById('wheel');
+    const ctx = canvas.getContext('2d');
+    const btn = document.getElementById('spinBtn');
+    const display = document.getElementById('resultDisplay');
+
+    const prizes = [
+        "Erhabene Helden Booster",      // 0
+        "Optimale Ordnung Booster",     // 1
+        "Boosterbundle",                // 2
+        "Pin Kollektion",               // 3
+        "PIKACHU EX",                   // 4 (TABU)
+        "Optimale Ordnung Booster"      // 5
+    ];
+
+    const colors = ["#111", "#222", "#111", "#222", "#FFD700", "#111"];
+    const arc = (2 * Math.PI) / prizes.length;
+    let totalRotation = 0; // Wir tracken die gesamte Rotation
+
+    function draw() {
+        prizes.forEach((p, i) => {
+            const angle = i * arc;
+            ctx.fillStyle = colors[i];
+            ctx.beginPath();
+            ctx.moveTo(250, 250);
+            ctx.arc(250, 250, 250, angle, angle + arc);
+            ctx.fill();
+            ctx.strokeStyle = "#444";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.save();
+            ctx.translate(250, 250);
+            ctx.rotate(angle + arc / 2);
+            ctx.fillStyle = (i === 4) ? "black" : "white";
+            ctx.font = "bold 15px sans-serif";
+            ctx.textAlign = "right";
+            ctx.fillText(p, 230, 8);
+            ctx.restore();
+        });
+    }
+
+    function runSpin() {
+        btn.disabled = true;
+        display.innerText = "Das Rad dreht sich...";
+        display.style.color = "#aaa";
+        
+        // 1. ZINK-LOGIK: Pikachu (Index 4) ist unmöglich
+        const chance = Math.random() * 100;
+        let targetIndex;
+
+        if (chance < 90) {
+            const boosterIndices = [0, 1, 5];
+            targetIndex = boosterIndices[Math.floor(Math.random() * boosterIndices.length)];
+        } else {
+            targetIndex = Math.random() > 0.5 ? 2 : 3;
+        }
+
+        // 2. ROTATIONS-BERECHNUNG (Absolut)
+        const rounds = 8 + Math.floor(Math.random() * 5); // 8-12 volle Runden
+        const segmentDeg = 360 / prizes.length;
+        
+        // Ein zufälliger Versatz: 10% bis 90% innerhalb des Feldes
+        // Damit landet der Pfeil niemals exakt auf der Trennlinie oder exakt in der Mitte
+        const randomOffsetInSegment = (Math.random() * (segmentDeg * 0.8)) + (segmentDeg * 0.1);
+        
+        // Die Formel: Aktuelle Position + volle Runden + Distanz zum Ziel-Segment
+        // Wir berechnen, wie viele Grad wir drehen müssen, damit targetIndex oben landet
+        const stopAngle = (360 - (targetIndex * segmentDeg)) - (segmentDeg / 2) + (Math.random() * 20 - 10); 
+        
+        // Wir addieren die neuen Runden zur bisherigen Rotation hinzu
+        const newRotation = totalRotation + (rounds * 360) + (360 - (totalRotation % 360)) + (360 - (targetIndex * segmentDeg) - randomOffsetInSegment);
+        
+        totalRotation = newRotation;
+        canvas.style.transform = `rotate(${totalRotation}deg)`;
+
+        // 3. ERGEBNIS ANZEIGEN
+        setTimeout(() => {
+            display.innerText = "GEWONNEN: " + prizes[targetIndex];
+            display.style.color = "#ffd700";
+            btn.disabled = false;
+        }, 7100); // Passend zur CSS-Transition (7s)
+    }
+
+    draw();
+</script>
