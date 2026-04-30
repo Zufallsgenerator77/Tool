@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Premium Mystery Spin</title>
+    <style>
+        body {
+            background: radial-gradient(circle, #2c2c2c 0%, #000000 100%);
+            color: white;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .wheel-wrapper {
+            position: relative;
+            padding: 20px;
+            border: 8px solid #333;
+            border-radius: 50%;
+            background: #222;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        /* Der rote Zeiger oben */
+        .indicator {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            background: #ff0000;
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+            z-index: 100;
+            filter: drop-shadow(0 4px 5px rgba(0,0,0,0.5));
+        }
+
+        canvas {
+            border-radius: 50%;
+            transition: transform 6s cubic-bezier(0.2, 0, 0.1, 1);
+        }
+
+        .info-panel {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        #spinBtn {
+            background: #ffd700;
+            color: #000;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #b8860b;
+            text-transform: uppercase;
+        }
+
+        #spinBtn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #b8860b;
+        }
+
+        #spinBtn:disabled {
+            background: #555;
+            box-shadow: 0 5px 0 #333;
+            color: #888;
+        }
+
+        #resultDisplay {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: #ffd700;
+            height: 2rem;
+            text-shadow: 0 0 10px rgba(255,215,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wheel-wrapper">
+        <div class="indicator"></div>
+        <canvas id="wheel" width="500" height="500"></canvas>
+    </div>
+
+    <div class="info-panel">
+        <button id="spinBtn" onclick="runSpin()">Drehen & Gewinnen</button>
+        <div id="resultDisplay">Viel Erfolg beim Sammeln!</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const btn = document.getElementById('spinBtn');
+        const display = document.getElementById('resultDisplay');
+
+        const prizes = [
+            "Erhabene Helden Booster",      // Index 0
+            "Optimale Ordnung Booster",     // Index 1
+            "Boosterbundle",                // Index 2
+            "Pin Kollektion",               // Index 3
+            "PIKACHU EX",                   // Index 4
+            "Optimale Ordnung Booster"      // Index 5
+        ];
+
+        const colors = ["#111", "#222", "#111", "#222", "#FFD700", "#111"];
+        const arc = (2 * Math.PI) / prizes.length;
+        let rotation = 0;
+
+        function draw() {
+            prizes.forEach((p, i) => {
+                const angle = i * arc;
+                ctx.fillStyle = colors[i];
+                ctx.beginPath();
+                ctx.moveTo(250, 250);
+                ctx.arc(250, 250, 250, angle, angle + arc);
+                ctx.fill();
+                ctx.strokeStyle = "#444";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(250, 250);
+                ctx.rotate(angle + arc / 2);
+                ctx.fillStyle = (i === 4) ? "black" : "white";
+                ctx.font = "bold 15px sans-serif";
+                ctx.textAlign = "right";
+                ctx.fillText(p, 230, 8);
+                ctx.restore();
+            });
+        }
+
+        function runSpin() {
+            btn.disabled = true;
+            display.innerText = "Das Schicksal entscheidet...";
+            
+            const chance = Math.random() * 100;
+            let targetIndex;
+
+            // GEZINKTE LOGIK:
+            // 90% Wahrscheinlichkeit für Booster (Index 0, 1 oder 5)
+            // 10% Wahrscheinlichkeit für Bundle/Pin (Index 2 oder 3)
+            // 0% für Pikachu (Index 4)
+            
+            if (chance < 90) {
+                // Landet auf einem der Booster-Felder
+                const options = [0, 1, 5];
+                targetIndex = options[Math.floor(Math.random() * options.length)];
+            } else {
+                // Landet auf Bundle oder Pin
+                targetIndex = Math.random() > 0.5 ? 2 : 3;
+            }
+
+            // Sicherstellen, dass Pikachu EX (Index 4) NIE getroffen wird
+            if (targetIndex === 4) targetIndex = 0; 
+
+            const extraRounds = 8; 
+            const segmentDeg = 360 / prizes.length;
+            
+            // Berechnung des Winkels:
+            // Der Indicator ist oben (270 Grad). 
+            // Wir ziehen den Winkel des Zielsegments ab.
+            const targetRotation = (extraRounds * 360) + (270 - (targetIndex * segmentDeg) - (segmentDeg / 2));
+            
+            rotation += targetRotation;
+            canvas.style.transform = `rotate(${rotation}deg)`;
+
+            setTimeout(() => {
+                display.innerText = "GEWONNEN: " + prizes[targetIndex];
+                btn.disabled = false;
+            }, 6000);
+        }
+
+        draw();
+    </script>
+</body>
+</html>
